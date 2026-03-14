@@ -9,6 +9,8 @@
 
 > Browse, preview, customize, and export themes for your Codex editor in seconds
 
+![Codex Themes Gallery](./public/og-image.png)
+
 ## ✨ Features
 
 - **1000+ Curated Themes** — Editor presets (Dracula, Nord, Tokyo Night, GitHub), brand palettes (Vercel, Stripe, Linear), color families, accessibility variants, and more
@@ -304,9 +306,9 @@ See [Full FAQ](./docs/faq.md) for more questions.
 ## 🔗 Links
 
 - [Codex Editor](https://codex.instantlandingpages.xyz)
-- [Gallery Live Demo](https://codex.instantlandingpages.xyz/themes)
-- [GitHub Repository](https://github.com/yourusername/codex-themes)
-- [Report a Bug](https://github.com/yourusername/codex-themes/issues)
+- [Gallery Live Demo](https://codex.instantlandingpages.xyz)
+- [GitHub Repository](https://github.com/samuxbuilds/codex-themes)
+- [Report a Bug](https://github.com/samuxbuilds/codex-themes/issues)
 
 ---
 

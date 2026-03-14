@@ -27,20 +27,27 @@ function mixColor(c1: string, c2: string, ratio: number): string {
  * @param props.theme - Theme to render
  */
 export default function CodexPreview({ theme }: { theme: CodexTheme }) {
-  const { surface, ink, accent } = theme.theme;
+  const { surface, ink, accent, opaqueWindows, contrast } = theme.theme;
   const { diffAdded, diffRemoved } = theme.theme.semanticColors;
   const isDark = theme.variant === "dark";
 
-  const sidebar = isDark
+  // opaqueWindows: when true, sidebar is same color as surface (no translucency effect)
+  const sidebarRaw = isDark
     ? adjustBrightness(surface, 8)
     : adjustBrightness(surface, -8);
+  const sidebar = opaqueWindows ? surface : sidebarRaw;
+
   const surfaceEl = isDark
     ? adjustBrightness(surface, 16)
     : adjustBrightness(surface, -4);
-  const muted = mixColor(ink, surface, 0.55);
+
+  // contrast (0–100): scales border opacity and muted text visibility
+  const contrastFactor = (contrast ?? 50) / 100;
+  const muted = mixColor(ink, surface, 0.55 - contrastFactor * 0.2);
+
   const borderColor = isDark
-    ? adjustBrightness(surface, 24)
-    : adjustBrightness(surface, -16);
+    ? adjustBrightness(surface, 24 + Math.round(contrastFactor * 20))
+    : adjustBrightness(surface, -(16 + Math.round(contrastFactor * 20)));
 
   return (
     <div

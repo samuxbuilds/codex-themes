@@ -112,7 +112,10 @@ export default function ThemeEditor({ baseTheme, onClose }: Props) {
 
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
         {/* Live preview */}
-        <CodexPreview theme={editedTheme} />
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--muted)" }}>Live Preview</p>
+          <CodexPreview theme={editedTheme} />
+        </div>
 
         {/* Variant toggle */}
         <div>
@@ -283,16 +286,16 @@ export default function ThemeEditor({ baseTheme, onClose }: Props) {
             </button>
           </div>
           <div
-            className="rounded-lg p-3 font-mono text-[10px] leading-relaxed break-all border"
+            className="rounded-lg p-3 font-mono text-[10px] leading-relaxed border overflow-x-auto"
             style={{
               background: "var(--background)",
               color: "var(--foreground)",
               borderColor: "var(--border)",
+              whiteSpace: "pre",
             }}
           >
-            <span style={{ color: "var(--accent)" }}>codex-theme-v1:</span>
-            {JSON.stringify(
-              { codeThemeId: "notion", theme: editedTheme.theme, variant },
+            <span style={{ color: "var(--accent)" }}>codex-theme-v1:</span>{`\n`}{JSON.stringify(
+              { codeThemeId: editedTheme.codeThemeId, theme: editedTheme.theme, variant },
               null,
               2
             )}
