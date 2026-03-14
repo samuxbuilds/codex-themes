@@ -24,7 +24,7 @@ function isSocialBot(userAgent: string): boolean {
 // Only curated / named themes. Generated themes (hue sweep, soft-light, etc.)
 // fall back to a generic Codex Themes OG image with a colour extracted from the ID.
 
-interface OgTheme {
+export interface OgTheme {
   name: string;
   accent: string;
   surface: string;
@@ -33,7 +33,7 @@ interface OgTheme {
   category: string;
 }
 
-const THEMES: Record<string, OgTheme> = {
+export const THEMES: Record<string, OgTheme> = {
   // Editor themes
   dracula: { name: "Dracula", accent: "#bd93f9", surface: "#282a36", ink: "#f8f8f2", variant: "dark", category: "Editor" },
   "dracula-soft": { name: "Dracula Soft", accent: "#9580c2", surface: "#2d2f3f", ink: "#e8e8e8", variant: "dark", category: "Editor" },
@@ -143,7 +143,7 @@ function mix(c1: string, c2: string, ratio: number): string {
 
 // --- SVG OG image generation ----------------------------------------------
 
-function buildOgSvg(theme: OgTheme | null, themeId: string): string {
+export function buildOgSvg(theme: OgTheme | null, themeId: string): string {
   // Use provided theme or derive accent from ID for generated themes
   const accent = theme?.accent ?? "#6366f1";
   const surface = theme?.surface ?? "#09090b";
@@ -224,8 +224,8 @@ function buildOgSvg(theme: OgTheme | null, themeId: string): string {
   <text x="336" y="378" font-family="ui-monospace,monospace" font-size="11" fill="${surface}" opacity="0.7">${ink}</text>
 
   <!-- URL / branding at bottom -->
-  <text x="60" y="580" font-family="system-ui,-apple-system,sans-serif" font-size="16" fill="${muted}" opacity="0.7">codex.instantlandingpages.xyz</text>
-  <text x="60" y="606" font-family="system-ui,-apple-system,sans-serif" font-size="13" fill="${muted}" opacity="0.4">1000+ curated themes for OpenAI Codex</text>
+  <text x="60" y="580" font-family="system-ui,-apple-system,sans-serif" font-size="16" fill="${ink}" opacity="0.8">codex.instantlandingpages.xyz</text>
+  <text x="60" y="606" font-family="system-ui,-apple-system,sans-serif" font-size="13" fill="${ink}" opacity="0.6">1000+ curated themes for OpenAI Codex</text>
 
   <!-- Right: Editor preview card -->
   <g filter="url(#shadow)">
@@ -326,7 +326,9 @@ function buildOgHtml(theme: OgTheme | null, themeId: string, requestUrl: string)
   const description = `Check out the ${name} ${category.toLowerCase()} theme (${variant}) for OpenAI Codex. Browse and copy config strings for 1000+ curated themes.`;
 
   const url = new URL(requestUrl);
-  const ogImageUrl = `${url.origin}/og-image?theme=${encodeURIComponent(themeId)}`;
+  // Point the social crawlers to the pre-generated PNG files in /og/ instead of SVG
+  const ogImagePath = theme ? `/og/${encodeURIComponent(themeId)}.png` : `/og/default.png`;
+  const ogImageUrl = `${url.origin}${ogImagePath}`;
   const themeUrl = `${url.origin}/?theme=${encodeURIComponent(themeId)}`;
 
   return `<!DOCTYPE html>
@@ -371,38 +373,21 @@ export default {
     const url = new URL(request.url);
     const userAgent = request.headers.get("User-Agent") ?? "";
 
-    // Route: /og-image?theme=<id> — serve the SVG OG image
-    if (url.pathname === "/og-image") {
-      const themeId = url.searchParams.get("theme") ?? "";
-      const theme = THEMES[themeId] ?? null;
-      const svg = buildOgSvg(theme, themeId || "codex-themes");
-      return new Response(svg, {
-        headers: {
-          "Content-Type": "image/svg+xml",
-          "Cache-Control": "public, max-age=86400",
-        },
-      });
-    }
-
     // Route: /share/<id>
     // We use /share/ because Cloudflare's static asset router intercepts "/" 
     // (serving index.html) before the worker runs.
-    const shareMatch = url.pathname.match(/^\/share\/([^\/]+)/);
+    const shareMatch = url.pathname.match(/^\/share\/([^/?]+)/);
     if (shareMatch) {
       const themeId = shareMatch[1];
-      if (isSocialBot(userAgent)) {
-        const theme = THEMES[themeId] ?? null;
-        const html = buildOgHtml(theme, themeId, request.url);
-        return new Response(html, {
-          headers: {
-            "Content-Type": "text/html;charset=UTF-8",
-            "Cache-Control": "public, max-age=3600",
-          },
-        });
-      } else {
-        // Human visitor: redirect to the actual SPA URL
-        return Response.redirect(`${url.origin}/?theme=${themeId}`, 302);
-      }
+      const theme = THEMES[themeId] ?? null;
+      const html = buildOgHtml(theme, themeId, request.url);
+      return new Response(html, {
+        headers: {
+          "Content-Type": "text/html;charset=UTF-8",
+          // Don't aggressively cache the HTML so we can update redirects if needed, but allow CDN caching
+          "Cache-Control": "public, s-maxage=3600, max-age=60",
+        },
+      });
     }
 
     // Default: serve the static SPA assets
