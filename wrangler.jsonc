@@ -1,0 +1,13 @@
+{
+  "name": "codex-themes",
+  "compatibility_date": "2026-03-14",
+  "assets": {
+    "directory": "./dist"
+  },
+  "routes": [
+    {
+      "pattern": "codex.instantlandingpages.xyz",
+      "custom_domain": true
+    }
+  ]
+}
