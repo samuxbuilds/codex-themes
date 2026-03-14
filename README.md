@@ -3,7 +3,7 @@
 **Interactive theme gallery with 1000+ customizable themes for Codex editor**
 
 [![Built with React](https://img.shields.io/badge/React-19-61dafb?logo=react)](https://react.dev)
-[![Powered by Vite](https://img.shields.io/badge/Vite-8-646cff?logo=vite)](https://vitejs.dev)
+[![Powered by Vite](https://img.shields.io/badge/Vite-7-646cff?logo=vite)](https://vitejs.dev)
 [![Deployed on Cloudflare](https://img.shields.io/badge/Cloudflare%20Pages-deployed-F38020?logo=cloudflare)](https://cloudflare.com)
 [![MIT License](https://img.shields.io/badge/License-MIT-green)]()
 
