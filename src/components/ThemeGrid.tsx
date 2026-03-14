@@ -19,6 +19,8 @@ import {
   LayoutGrid,
   ArrowUpRight,
   SlidersHorizontal,
+  Share2,
+  Link,
 } from "lucide-react";
 import { CodexTheme } from "../lib/types";
 import { getAllThemes, getCategories, encodeThemeConfig } from "../lib/theme-generator";
@@ -52,6 +54,7 @@ export default function ThemeGrid() {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const [panelMode, setPanelMode] = useState<PanelMode>("preview");
+  const [linkCopied, setLinkCopied] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -63,6 +66,37 @@ export default function ThemeGrid() {
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Query-param routing: read ?theme= from URL on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const themeId = params.get("theme");
+    if (themeId) {
+      const found = allThemes.find((t) => t.id === themeId);
+      if (found) setSelectedTheme(found);
+    }
+  }, [allThemes]);
+
+  // Update ?theme= query param when theme selection changes
+  const selectTheme = useCallback((theme: CodexTheme | null) => {
+    setSelectedTheme(theme);
+    const url = new URL(window.location.href);
+    if (theme) {
+      url.searchParams.set("theme", theme.id);
+    } else {
+      url.searchParams.delete("theme");
+    }
+    window.history.replaceState(null, "", url.toString());
+  }, []);
+
+  const copyShareLink = useCallback((theme: CodexTheme) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("theme", theme.id);
+    navigator.clipboard.writeText(url.toString()).then(() => {
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    });
   }, []);
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -92,12 +126,12 @@ export default function ThemeGrid() {
   }, [allThemes, selectedCategory, variantFilter, search]);
 
   const colCount = useMemo(() => {
-    if (!containerRef.current) return 4;
-    const w = containerRef.current.clientWidth - 32;
     // On mobile, force 1 or 2 columns maximum to avoid squashing
     if (isMobile) {
       return viewMode === "grid" ? 1 : 2;
     }
+    if (!containerRef.current) return 4;
+    const w = containerRef.current.clientWidth - 32;
     const min = viewMode === "grid" ? GRID_COL_MIN : COMPACT_COL_MIN;
     return Math.max(1, Math.floor((w + GAP) / (min + GAP)));
   }, [viewMode, sidebarOpen, selectedTheme, isMobile]);
@@ -343,7 +377,7 @@ export default function ThemeGrid() {
                               theme={theme}
                               isSelected={selectedTheme?.id === theme.id}
                               isCopied={copiedId === theme.id}
-                              onClick={() => setSelectedTheme(theme)}
+                              onClick={() => selectTheme(theme)}
                               onCopy={(e) => copyConfig(theme, e)}
                             />
                           ) : (
@@ -352,7 +386,7 @@ export default function ThemeGrid() {
                               theme={theme}
                               isSelected={selectedTheme?.id === theme.id}
                               isCopied={copiedId === theme.id}
-                              onClick={() => setSelectedTheme(theme)}
+                              onClick={() => selectTheme(theme)}
                               onCopy={(e) => copyConfig(theme, e)}
                             />
                           )
@@ -386,8 +420,10 @@ export default function ThemeGrid() {
                     theme={selectedTheme}
                     isCopied={copiedId === selectedTheme.id}
                     onCopy={() => copyConfig(selectedTheme)}
-                    onClose={() => setSelectedTheme(null)}
+                    onClose={() => selectTheme(null)}
                     onCustomize={() => setPanelMode("editor")}
+                    linkCopied={linkCopied}
+                    onShareLink={() => copyShareLink(selectedTheme)}
                   />
                 )}
               </motion.div>
@@ -502,12 +538,16 @@ function PreviewPanel({
   onCopy,
   onClose,
   onCustomize,
+  linkCopied,
+  onShareLink,
 }: {
   theme: CodexTheme;
   isCopied: boolean;
   onCopy: () => void;
   onClose: () => void;
   onCustomize: () => void;
+  linkCopied: boolean;
+  onShareLink: () => void;
 }) {
   const config = encodeThemeConfig(theme);
   const [configCopied, setConfigCopied] = useState(false);
@@ -540,7 +580,7 @@ function PreviewPanel({
         </button>
       </div>
 
-      <div className="p-4 flex flex-col gap-4">
+      <div className="p-4 flex flex-col gap-5">
         <CodexPreview theme={theme} />
 
         <div className="flex flex-wrap gap-1.5">
@@ -591,31 +631,51 @@ function PreviewPanel({
           </div>
         </div>
 
-        {/* Copy button */}
-        <button
-          onClick={copyConfigString}
-          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm font-medium transition-all"
-          style={{
-            background: configCopied ? "#22c55e" : theme.theme.accent,
-            color: theme.variant === "light" && !configCopied ? "#ffffff" : theme.theme.surface,
-          }}
-        >
-          {configCopied ? (<><Check className="w-4 h-4" /> Copied!</>) : (<><Copy className="w-4 h-4" /> Copy Theme Config</>)}
-        </button>
+        {/* Action Buttons */}
+        <div className="flex flex-col gap-2.5">
+          {/* Copy button */}
+          <button
+            onClick={copyConfigString}
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm font-medium transition-all"
+            style={{
+              background: configCopied ? "#22c55e" : theme.theme.accent,
+              color: theme.variant === "light" && !configCopied ? "#ffffff" : theme.theme.surface,
+            }}
+          >
+            {configCopied ? (<><Check className="w-4 h-4" /> Copied!</>) : (<><Copy className="w-4 h-4" /> Copy Theme Config</>)}
+          </button>
 
-        {/* Customize button */}
-        <button
-          onClick={onCustomize}
-          className="flex items-center justify-center gap-2 w-full py-2 rounded-lg text-sm font-medium border transition-colors hover:opacity-90"
-          style={{
-            borderColor: "var(--border)",
-            color: "var(--foreground)",
-            background: "var(--surface-2)",
-          }}
-        >
-          <SlidersHorizontal className="w-4 h-4" />
-          Customize Theme
-        </button>
+          {/* Customize button */}
+          <button
+            onClick={onCustomize}
+            className="flex items-center justify-center gap-2 w-full py-2 rounded-lg text-sm font-medium border transition-colors hover:opacity-90"
+            style={{
+              borderColor: "var(--border)",
+              color: "var(--foreground)",
+              background: "var(--surface-2)",
+            }}
+          >
+            <SlidersHorizontal className="w-4 h-4" />
+            Customize Theme
+          </button>
+
+          {/* Share link button */}
+          <button
+            onClick={onShareLink}
+            className="flex items-center justify-center gap-2 w-full py-2 rounded-lg text-sm font-medium border transition-colors hover:opacity-90"
+            style={{
+              borderColor: linkCopied ? "#22c55e" : "var(--border)",
+              color: linkCopied ? "#22c55e" : "var(--foreground)",
+              background: linkCopied ? "rgba(34,197,94,0.1)" : "var(--surface-2)",
+            }}
+          >
+            {linkCopied ? (
+              <><Check className="w-4 h-4" /> Link Copied!</>
+            ) : (
+              <><Link className="w-4 h-4" /> Share Theme Link</>
+            )}
+          </button>
+        </div>
 
         {/* Config string */}
         <div>
@@ -626,11 +686,10 @@ function PreviewPanel({
             </button>
           </div>
           <div
-            className="rounded-lg p-3 font-mono text-[10px] leading-relaxed break-all overflow-x-auto border"
+            className="rounded-lg p-3 font-mono text-[10px] leading-relaxed whitespace-pre-wrap break-words overflow-x-auto border"
             style={{ background: "var(--background)", color: "var(--foreground)", borderColor: "var(--border)" }}
           >
-            <span style={{ color: "var(--accent)" }}>codex-theme-v1:</span>
-            {configPretty}
+            <span style={{ color: "var(--accent)" }}>codex-theme-v1:</span> {configPretty}
           </div>
         </div>
 
