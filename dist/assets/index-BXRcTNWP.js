@@ -30558,7 +30558,7 @@ function ThemeEditor({ baseTheme, onClose }) {
       setTimeout(() => setCopied(false), 2e3);
     });
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-[400px] animate-slide-right flex flex-col h-full", children: [
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full md:w-[400px] animate-slide-right flex flex-col h-full", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs(
       "div",
       {
@@ -30912,9 +30912,8 @@ function ThemeGrid() {
     window.history.replaceState(null, "", url.toString());
   }, []);
   const copyShareLink = reactExports.useCallback((theme) => {
-    const url = new URL(window.location.href);
-    url.searchParams.set("theme", theme.id);
-    navigator.clipboard.writeText(url.toString()).then(() => {
+    const shareUrl = `${window.location.origin}/share/${encodeURIComponent(theme.id)}`;
+    navigator.clipboard.writeText(shareUrl).then(() => {
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2e3);
     });
@@ -31359,7 +31358,7 @@ function PreviewPanel({
     null,
     2
   );
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-[360px] animate-slide-right", children: [
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full md:w-[360px] animate-slide-right", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs(
       "div",
       {

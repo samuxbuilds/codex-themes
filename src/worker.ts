@@ -384,17 +384,25 @@ export default {
       });
     }
 
-    // Route: /?theme=<id> for social bots — return custom OG HTML
-    const themeId = url.searchParams.get("theme");
-    if (themeId && isSocialBot(userAgent)) {
-      const theme = THEMES[themeId] ?? null;
-      const html = buildOgHtml(theme, themeId, request.url);
-      return new Response(html, {
-        headers: {
-          "Content-Type": "text/html;charset=UTF-8",
-          "Cache-Control": "public, max-age=3600",
-        },
-      });
+    // Route: /share/<id>
+    // We use /share/ because Cloudflare's static asset router intercepts "/" 
+    // (serving index.html) before the worker runs.
+    const shareMatch = url.pathname.match(/^\/share\/([^\/]+)/);
+    if (shareMatch) {
+      const themeId = shareMatch[1];
+      if (isSocialBot(userAgent)) {
+        const theme = THEMES[themeId] ?? null;
+        const html = buildOgHtml(theme, themeId, request.url);
+        return new Response(html, {
+          headers: {
+            "Content-Type": "text/html;charset=UTF-8",
+            "Cache-Control": "public, max-age=3600",
+          },
+        });
+      } else {
+        // Human visitor: redirect to the actual SPA URL
+        return Response.redirect(`${url.origin}/?theme=${themeId}`, 302);
+      }
     }
 
     // Default: serve the static SPA assets

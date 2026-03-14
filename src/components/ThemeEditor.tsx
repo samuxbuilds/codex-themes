@@ -80,7 +80,7 @@ export default function ThemeEditor({ baseTheme, onClose }: Props) {
   };
 
   return (
-    <div className="w-[400px] animate-slide-right flex flex-col h-full">
+    <div className="w-full md:w-[400px] animate-slide-right flex flex-col h-full">
       <div
         className="flex items-center justify-between px-4 py-3 border-b sticky top-0 z-10"
         style={{ borderColor: "var(--border)", background: "var(--surface)" }}

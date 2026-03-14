@@ -91,9 +91,8 @@ export default function ThemeGrid() {
   }, []);
 
   const copyShareLink = useCallback((theme: CodexTheme) => {
-    const url = new URL(window.location.href);
-    url.searchParams.set("theme", theme.id);
-    navigator.clipboard.writeText(url.toString()).then(() => {
+    const shareUrl = `${window.location.origin}/share/${encodeURIComponent(theme.id)}`;
+    navigator.clipboard.writeText(shareUrl).then(() => {
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000);
     });
@@ -566,7 +565,7 @@ function PreviewPanel({
   );
 
   return (
-    <div className="w-[360px] animate-slide-right">
+    <div className="w-full md:w-[360px] animate-slide-right">
       <div
         className="flex items-center justify-between px-4 py-3 border-b sticky top-0 z-10"
         style={{ borderColor: "var(--border)", background: "var(--surface)" }}
